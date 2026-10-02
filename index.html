@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tra cứu thời khóa biểu - THPT Chuyên Nguyễn Thiện Thành</title>
+
+<!-- Đọc file Excel .xlsx/.xls -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --green:#236b57;
+  --green-2:#2f8168;
+  --green-light:#e8f3ee;
+  --cream:#fff5dc;
+  --gold:#e7b64c;
+  --text:#31443e;
+  --muted:#71827d;
+  --line:#bed7cd;
+  --bg:#f7faf8;
+  --white:#ffffff;
+  --shadow:0 8px 24px rgba(37,82,68,.08);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.header{
+  background:linear-gradient(180deg,#f6fbf8 0%,#eff8f4 100%);
+  border-top:5px solid var(--gold);
+  border-bottom:3px solid var(--gold);
+}
+.header-inner{
+  max-width:1200px;
+  margin:auto;
+  padding:22px 28px 18px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+.logo{
+  width:76px;height:76px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--green);
+  color:#fff;
+  border:5px solid #eaf5f0;
+  box-shadow:0 0 0 1px var(--green);
+  font-weight:800;
+  text-align:center;
+  font-size:13px;
+  line-height:1.15;
+}
+.title h1{
+  margin:0;
+  color:#175640;
+  font-size:27px;
+  letter-spacing:.3px;
+}
+.title p{
+  margin:7px 0 0;
+  color:#ad7820;
+  font-size:16px;
+  font-weight:700;
+}
+
+.container{
+  width:min(1200px,calc(100% - 32px));
+  margin:24px auto 40px;
+}
+
+.tabs{
+  display:flex;
+  gap:8px;
+  border-bottom:2px solid var(--green);
+  margin-bottom:18px;
+  overflow:auto;
+}
+.tab{
+  border:2px solid var(--line);
+  border-bottom:0;
+  background:var(--green-light);
+  color:#46655b;
+  padding:12px 24px;
+  border-radius:12px 12px 0 0;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.tab.active{
+  background:#fff;
+  color:#23473d;
+  border-color:var(--green);
+  transform:translateY(2px);
+}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.filters{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:18px;
+}
+.field label{
+  display:block;
+  margin-bottom:7px;
+  font-weight:700;
+  color:#557066;
+}
+select,input{
+  width:100%;
+  padding:12px 13px;
+  border:2px solid #6ea491;
+  border-radius:10px;
+  background:#fff;
+  color:var(--text);
+  font-size:15px;
+  outline:none;
+}
+select:focus,input:focus{box-shadow:0 0 0 3px rgba(47,129,104,.12)}
+
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:end;
+}
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:12px 17px;
+  font-weight:800;
+  cursor:pointer;
+  font-size:15px;
+}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:#1b5948}
+.btn-gold{background:#f1c96b;color:#5e430d}
+.btn-outline{background:#fff;color:var(--green);border:2px solid #76a996}
+.btn-danger{background:#ffe7e7;color:#a63f3f;border:1px solid #efb8b8}
+.btn-small{padding:9px 12px;font-size:13px}
+
+.info{
+  padding:15px 17px;
+  border:1px dashed #c8ddd5;
+  border-radius:12px;
+  background:#fbfefd;
+  color:#667a73;
+  margin-bottom:16px;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #d7e6e0;
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.card-head{
+  padding:15px 18px;
+  background:#f2f8f5;
+  border-bottom:1px solid #d7e6e0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.card-head strong{font-size:18px;color:#245d4c}
+.card-head span{color:var(--muted);font-size:14px}
+
+.table-wrap{overflow:auto}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:850px;
+}
+th,td{
+  border:1px solid #bfd6cc;
+  padding:9px 10px;
+  text-align:left;
+  vertical-align:top;
+}
+th{
+  background:#dff0e8;
+  color:#2d5f51;
+  font-size:14px;
+}
+td{background:#fff;font-size:14px}
+td small{display:block;color:#74837e;margin-top:3px}
+.period{
+  width:78px;
+  text-align:center;
+  font-weight:800;
+  color:#44635a;
+  background:#f7fbf9;
+}
+.session{
+  background:#f4f8f6;
+  font-weight:800;
+  color:#41665a;
+  text-align:center;
+  width:86px;
+}
+.subject{
+  font-weight:800;
+  color:#2f4e46;
+}
+.teacher{color:#5f716b}
+.room{color:#876f41}
+
+.class-grid,.teacher-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+.person-item{
+  border:1px solid #cfe2da;
+  background:#fff;
+  border-radius:12px;
+  padding:14px;
+  cursor:pointer;
+  transition:.15s;
+}
+.person-item:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow);
+  border-color:#76a996;
+}
+.person-item strong{display:block;color:#285b4c;margin-bottom:4px}
+.person-item span{color:#7b8c86;font-size:13px}
+
+.split{
+  display:grid;
+  grid-template-columns:270px 1fr;
+  gap:18px;
+}
+.sidebar-card{
+  background:#fff;
+  border:1px solid #d7e6e0;
+  border-radius:14px;
+  padding:14px;
+  height:fit-content;
+}
+.sidebar-card h3{margin:4px 0 12px;color:#245d4c}
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  max-height:620px;
+  overflow:auto;
+}
+.list button{
+  border:1px solid #cfe2da;
+  background:#f8fbf9;
+  color:#47665c;
+  text-align:left;
+  padding:10px 12px;
+  border-radius:9px;
+  cursor:pointer;
+  font-weight:700;
+}
+.list button.active{
+  background:#e1f1ea;
+  border-color:#6fa693;
+  color:#235c4a;
+}
+
+.schedule-grid{
+  display:grid;
+  grid-template-columns:100px repeat(5,minmax(165px,1fr));
+  border:1px solid #bfd6cc;
+  border-radius:12px;
+  overflow:hidden;
+  min-width:930px;
+}
+.schedule-grid .cell{
+  border-right:1px solid #bfd6cc;
+  border-bottom:1px solid #bfd6cc;
+  min-height:66px;
+  padding:8px;
+  background:#fff;
+}
+.schedule-grid .head{
+  background:#dff0e8;
+  text-align:center;
+  font-weight:800;
+  color:#2d5f51;
+  min-height:48px;
+}
+.schedule-grid .row-title{
+  background:#f3f8f5;
+  font-weight:800;
+  color:#4a675e;
+  text-align:center;
+}
+.lesson{
+  background:#f8fcfa;
+  border-left:4px solid #6ea491;
+  border-radius:8px;
+  padding:7px 8px;
+  margin-bottom:5px;
+}
+.lesson:last-child{margin-bottom:0}
+.lesson b{display:block;color:#2c4f45}
+.lesson small{display:block;color:#75857f;margin-top:3px}
+
+.upload-box{
+  border:2px dashed #99bdb0;
+  border-radius:14px;
+  padding:22px;
+  background:#fbfefd;
+}
+.upload-box h3{margin-top:0;color:#245d4c}
+.upload-box p{color:#70817c}
+.file-line{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.file-line input[type=file]{border:0;padding:0;background:transparent}
+.history{margin-top:20px}
+.history-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid #e1ece7;
+}
+.history-row:last-child{border-bottom:0}
+.history-left strong{display:block;color:#3c5e54}
+.history-left span{font-size:13px;color:#82928d}
+.tag{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:20px;
+  background:#e8f3ee;
+  color:#356b5a;
+  font-size:12px;
+  font-weight:800;
+  margin-left:5px;
+}
+
+.empty{
+  padding:28px;
+  text-align:center;
+  color:#7d8d88;
+  border:1px dashed #cbded6;
+  border-radius:12px;
+  background:#fcfefd;
+}
+
+.footer{
+  text-align:center;
+  color:#72827d;
+  padding:26px 10px 34px;
+  font-size:14px;
+}
+
+.badge-date{
+  color:#9b711f;
+  font-weight:800;
+}
+
+@media (max-width:900px){
+  .filters{grid-template-columns:repeat(2,1fr)}
+  .class-grid,.teacher-grid{grid-template-columns:repeat(2,1fr)}
+  .split{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .container{width:min(100% - 18px,1200px)}
+  .header-inner{padding:16px 14px}
+  .logo{width:62px;height:62px;font-size:11px}
+  .title h1{font-size:20px}
+  .title p{font-size:13px}
+  .filters{grid-template-columns:1fr}
+  .class-grid,.teacher-grid{grid-template-columns:1fr}
+  .tab{padding:11px 16px}
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">NTT<br>THPT<br>CHUYÊN</div>
+    <div class="title">
+      <h1>TRƯỜNG THPT CHUYÊN NGUYỄN THIỆN THÀNH</h1>
+      <p>Tra cứu thời khóa biểu</p>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="tabs">
+    <button class="tab active" data-tab="tong">Thời khóa biểu tổng</button>
+    <button class="tab" data-tab="lop">Thời khóa biểu lớp</button>
+    <button class="tab" data-tab="gv">Thời khóa biểu giáo viên</button>
+    <button class="tab" data-tab="capnhat">Cập nhật dữ liệu</button>
+  </div>
+
+  <!-- ================= TỔNG ================= -->
+  <section id="tong" class="panel active">
+    <div class="filters">
+      <div class="field">
+        <label>Chọn khối</label>
+        <select id="tongKhoi">
+          <option value="all">Tất cả khối 10, 11, 12</option>
+          <option value="10">Khối 10</option>
+          <option value="11">Khối 11</option>
+          <option value="12">Khối 12</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Chọn ngày</label>
+        <select id="tongNgay">
+          <option value="all">Tất cả các ngày</option>
+          <option value="2">Thứ 2</option>
+          <option value="3">Thứ 3</option>
+          <option value="4">Thứ 4</option>
+          <option value="5">Thứ 5</option>
+          <option value="6">Thứ 6</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Buổi</label>
+        <select id="tongBuoi">
+          <option value="all">Sáng + chiều</option>
+          <option value="Sáng">Sáng</option>
+          <option value="Chiều">Chiều</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tìm lớp / môn / giáo viên</label>
+        <input id="tongTim" placeholder="Ví dụ: 10C1, Toán, Hoàn...">
+      </div>
+    </div>
+
+    <div class="actions" style="margin-bottom:18px">
+      <button class="btn btn-primary" onclick="renderTong()">Tra cứu</button>
+      <button class="btn btn-outline" onclick="window.print()">In lịch</button>
+    </div>
+
+    <div class="info">
+      <b>Dữ liệu cập nhật:</b> <span id="lastUpdate"></span>
+      <span style="margin-left:12px">|</span>
+      <span style="margin-left:12px">Tổng số tiết: <b id="totalLessons">0</b></span>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <strong>Thời khóa biểu tổng</strong>
+        <span id="tongCount"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Thứ</th>
+              <th>Buổi</th>
+              <th>Tiết</th>
+              <th>Lớp</th>
+              <th>Môn</th>
+              <th>Giáo viên</th>
+              <th>Phòng</th>
+            </tr>
+          </thead>
+          <tbody id="tongBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LỚP ================= -->
+  <section id="lop" class="panel">
+    <div class="split">
+      <aside class="sidebar-card">
+        <h3>Chọn lớp</h3>
+        <input id="searchClass" placeholder="Tìm lớp..." style="margin-bottom:10px">
+        <div id="classList" class="list"></div>
+      </aside>
+
+      <div>
+        <div class="actions" style="margin-bottom:16px">
+          <button class="btn btn-primary" onclick="copyCurrentClassLink()">Sao chép link</button>
+          <button class="btn btn-gold" onclick="window.print()">In lịch</button>
+        </div>
+
+        <div id="classTitle" class="info">Hãy chọn một lớp để xem thời khóa biểu.</div>
+
+        <div class="card">
+          <div class="card-head">
+            <strong id="className">Thời khóa biểu lớp</strong>
+            <span id="classMeta"></span>
+          </div>
+          <div class="table-wrap">
+            <div id="classSchedule"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GIÁO VIÊN ================= -->
+  <section id="gv" class="panel">
+    <div class="split">
+      <aside class="sidebar-card">
+        <h3>Chọn giáo viên</h3>
+        <input id="searchTeacher" placeholder="Tìm giáo viên..." style="margin-bottom:10px">
+        <div id="teacherList" class="list"></div>
+      </aside>
+
+      <div>
+        <div class="actions" style="margin-bottom:16px">
+          <button class="btn btn-primary" onclick="copyCurrentTeacherLink()">Sao chép link</button>
+          <button class="btn btn-gold" onclick="window.print()">In lịch</button>
+        </div>
+
+        <div id="teacherTitle" class="info">Hãy chọn một giáo viên để xem thời khóa biểu.</div>
+
+        <div class="card">
+          <div class="card-head">
+            <strong id="teacherName">Thời khóa biểu giáo viên</strong>
+            <span id="teacherMeta"></span>
+          </div>
+          <div class="table-wrap">
+            <div id="teacherSchedule"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CẬP NHẬT ================= -->
+  <section id="capnhat" class="panel">
+    <div class="upload-box">
+      <h3>Quản lý và cập nhật thời khóa biểu</h3>
+      <p>
+        Chủ web có thể tải file Excel/CSV từ máy tính lên để cập nhật dữ liệu.
+        Website sẽ tự chia dữ liệu cho phần <b>Thời khóa biểu tổng</b>,
+        <b>Thời khóa biểu lớp</b> và <b>Thời khóa biểu giáo viên</b>.
+      </p>
+
+      <div class="file-line">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        <button class="btn btn-primary" onclick="uploadSchedule()">Tải tệp và cập nhật</button>
+        <button class="btn btn-outline" onclick="exportTemplate()">Tải file mẫu</button>
+        <button class="btn btn-danger" onclick="restoreSample()">Khôi phục dữ liệu mẫu</button>
+      </div>
+
+      <div id="uploadMessage" style="margin-top:14px;font-weight:700"></div>
+    </div>
+
+    <div class="card history">
+      <div class="card-head">
+        <strong>Lịch sử cập nhật</strong>
+        <span>Dữ liệu lưu theo ngày đăng tải</span>
+      </div>
+      <div style="padding:16px">
+        <div id="historyList"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Dữ liệu tổng hợp từ file thời khóa biểu của trường.
+  Có sai sót xin báo lại phòng đào tạo.
+</footer>
+
+<script>
+/* ============================================================
+   1. DỮ LIỆU MẪU
+   Thực tế: chủ web chỉ cần tải file Excel lên.
+   Cột Excel nên có:
+   Ngày | Buổi | Tiết | Lớp | Môn | Giáo viên | Phòng
+============================================================ */
+
+const SAMPLE_DATA = [
+  {day:2,session:"Sáng",period:1,class:"10C1",subject:"Chào cờ",teacher:"",room:""},
+  {day:2,session:"Sáng",period:2,class:"10C1",subject:"Địa",teacher:"Lợi",room:"A101"},
+  {day:2,session:"Sáng",period:3,class:"10C1",subject:"Văn",teacher:"T.Nguyên",room:"A101"},
+  {day:2,session:"Sáng",period:4,class:"10C1",subject:"Toán",teacher:"Hoàn",room:"A101"},
+  {day:2,session:"Sáng",period:5,class:"10C1",subject:"Mỹ thuật",teacher:"T.Thư",room:"A101"},
+  {day:2,session:"Chiều",period:1,class:"10C1",subject:"Cầu lông",teacher:"Thiên",room:"Sân 1"},
+  {day:2,session:"Chiều",period:1,class:"10C1",subject:"Bóng chuyền",teacher:"V.Phong",room:"Sân 2"},
+  {day:2,session:"Chiều",period:2,class:"10C1",subject:"Cầu lông",teacher:"Thiên",room:"Sân 1"},
+  {day:2,session:"Chiều",period:2,class:"10C1",subject:"Bóng chuyền",teacher:"V.Phong",room:"Sân 2"},
+  {day:2,session:"Chiều",period:3,class:"10C1",subject:"HĐTN-HN",teacher:"L.T.N.Trúc",room:""},
+  {day:2,session:"Chiều",period:4,class:"10C1",subject:"HĐTN-HN",teacher:"L.T.N.Trúc",room:""},
+
+  {day:3,session:"Sáng",period:1,class:"10C1",subject:"Sử",teacher:"Linh",room:"A101"},
+  {day:3,session:"Sáng",period:2,class:"10C1",subject:"Sử",teacher:"Linh",room:"A101"},
+  {day:3,session:"Sáng",period:3,class:"10C1",subject:"Địa",teacher:"Lợi",room:"A101"},
+  {day:3,session:"Sáng",period:4,class:"10C1",subject:"GDKTPL",teacher:"Cine",room:"A101"},
+  {day:3,session:"Sáng",period:5,class:"10C1",subject:"TA",teacher:"L.V.Hào",room:"A101"},
+  {day:3,session:"Chiều",period:3,class:"10C1",subject:"HĐTN-HN",teacher:"L.T.N.Trúc",room:""},
+  {day:3,session:"Chiều",period:4,class:"10C1",subject:"GDĐP",teacher:"T.Sơn",room:""},
+
+  {day:4,session:"Sáng",period:1,class:"10C1",subject:"Toán-CĐ",teacher:"M.Trâm",room:"A101"},
+  {day:4,session:"Sáng",period:2,class:"10C1",subject:"Tin-2",teacher:"N.T.Quỳnh",room:"P.Tin"},
+  {day:4,session:"Sáng",period:3,class:"10C1",subject:"Tin-2",teacher:"N.T.Quỳnh",room:"P.Tin"},
+  {day:4,session:"Sáng",period:4,class:"10C1",subject:"Văn",teacher:"T.Thủy",room:"A101"},
+  {day:4,session:"Sáng",period:5,class:"10C1",subject:"Văn",teacher:"T.Thủy",room:"A101"},
+  {day:4,session:"Chiều",period:1,class:"10C1",subject:"GDQP&AN",teacher:"T.Sơn",room:""},
+  {day:4,session:"Chiều",period:2,class:"10C1",subject:"GDKTPL",teacher:"Cine",room:""},
+
+  {day:5,session:"Sáng",period:1,class:"10C1",subject:"Toán",teacher:"Hoàn",room:"A101"},
+  {day:5,session:"Sáng",period:2,class:"10C1",subject:"Toán",teacher:"Hoàn",room:"A101"},
+  {day:5,session:"Sáng",period:3,class:"10C1",subject:"Văn",teacher:"T.Thủy",room:"A101"},
+  {day:5,session:"Sáng",period:4,class:"10C1",subject:"Sử",teacher:"Linh",room:"A101"},
+  {day:5,session:"Sáng",period:5,class:"10C1",subject:"Mỹ thuật",teacher:"T.Thư",room:"A101"},
+
+  {day:6,session:"Sáng",period:1,class:"10C1",subject:"TA",teacher:"L.V.Hào",room:"A101"},
+  {day:6,session:"Sáng",period:2,class:"10C1",subject:"TA",teacher:"L.V.Hào",room:"A101"},
+  {day:6,session:"Sáng",period:3,class:"10C1",subject:"Văn",teacher:"Ngoan",room:"A101"},
+  {day:6,session:"Sáng",period:4,class:"10C1",subject:"Văn",teacher:"Ngoan",room:"A101"},
+
+  {day:2,session:"Sáng",period:1,class:"10C2",subject:"Toán",teacher:"Minh",room:"A102"},
+  {day:2,session:"Sáng",period:2,class:"10C2",subject:"Văn",teacher:"Thủy",room:"A102"},
+  {day:2,session:"Sáng",period:3,class:"10C2",subject:"Anh",teacher:"Hào",room:"A102"},
+  {day:3,session:"Sáng",period:1,class:"11A1",subject:"Toán",teacher:"Minh",room:"B201"},
+  {day:3,session:"Sáng",period:2,class:"11A1",subject:"Lí",teacher:"Sơn",room:"B201"},
+  {day:4,session:"Chiều",period:1,class:"11A1",subject:"Hóa",teacher:"Mai",room:"Lab 1"},
+  {day:5,session:"Sáng",period:3,class:"12A1",subject:"Toán",teacher:"Minh",room:"C301"},
+  {day:5,session:"Sáng",period:4,class:"12A1",subject:"Anh",teacher:"Hào",room:"C301"},
+  {day:6,session:"Chiều",period:1,class:"12A1",subject:"Lí",teacher:"Sơn",room:"Lab 2"}
+];
+
+const DAY_NAMES = {
+  2:"Thứ 2",3:"Thứ 3",4:"Thứ 4",5:"Thứ 5",6:"Thứ 6"
+};
+
+let scheduleData = [];
+let currentClass = "";
+let currentTeacher = "";
+
+function cloneData(data){
+  return data.map(x => ({...x}));
+}
+
+function normalizeText(v){
+  return String(v ?? "").trim();
+}
+
+function getGrade(className){
+  const m = String(className).match(/^(10|11|12)/);
+  return m ? m[1] : "";
+}
+
+function sortSchedule(a,b){
+  return (a.day-b.day)
+    || (a.session===b.session?0:a.session==="Sáng"?-1:1)
+    || (a.period-b.period)
+    || a.class.localeCompare(b.class,'vi')
+    || a.subject.localeCompare(b.subject,'vi');
+}
+
+function saveData(){
+  localStorage.setItem("ntt_schedule_data", JSON.stringify(scheduleData));
+  localStorage.setItem("ntt_last_update", new Date().toISOString());
+}
+
+function loadData(){
+  const saved = localStorage.getItem("ntt_schedule_data");
+  scheduleData = saved ? JSON.parse(saved) : cloneData(SAMPLE_DATA);
+  scheduleData.sort(sortSchedule);
+  updateLastUpdate();
+}
+
+function updateLastUpdate(){
+  const raw = localStorage.getItem("ntt_last_update");
+  let text = "Dữ liệu mẫu";
+  if(raw){
+    text = new Date(raw).toLocaleString("vi-VN");
+  }
+  document.getElementById("lastUpdate").textContent = text;
+}
+
+function uniqueSorted(arr){
+  return [...new Set(arr)].filter(Boolean).sort((a,b)=>a.localeCompare(b,'vi',{numeric:true}));
+}
+
+/* ================= TABS ================= */
+
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ================= TỔNG ================= */
+
+function renderTong(){
+  const khoi = document.getElementById("tongKhoi").value;
+  const ngay = document.getElementById("tongNgay").value;
+  const buoi = document.getElementById("tongBuoi").value;
+  const tim = normalizeText(document.getElementById("tongTim").value).toLowerCase();
+
+  let data = scheduleData.filter(x=>{
+    const okKhoi = khoi==="all" || getGrade(x.class)===khoi;
+    const okNgay = ngay==="all" || String(x.day)===ngay;
+    const okBuoi = buoi==="all" || x.session===buoi;
+
+    const hay = [
+      x.class,x.subject,x.teacher,x.room,DAY_NAMES[x.day]
+    ].join(" ").toLowerCase();
+
+    const okTim = !tim || hay.includes(tim);
+
+    return okKhoi && okNgay && okBuoi && okTim;
+  });
+
+  data.sort(sortSchedule);
+
+  const body = document.getElementById("tongBody");
+  if(!data.length){
+    body.innerHTML = `<tr><td colspan="7"><div class="empty">Không tìm thấy dữ liệu phù hợp.</div></td></tr>`;
+  }else{
+    body.innerHTML = data.map(x=>`
+      <tr>
+        <td>${DAY_NAMES[x.day]}</td>
+        <td>${x.session}</td>
+        <td class="period">Tiết ${x.period}</td>
+        <td><b>${x.class}</b></td>
+        <td class="subject">${x.subject}</td>
+        <td class="teacher">${x.teacher || "—"}</td>
+        <td class="room">${x.room || "—"}</td>
+      </tr>
+    `).join("");
+  }
+
+  document.getElementById("tongCount").textContent = `${data.length} tiết`;
+  document.getElementById("totalLessons").textContent = scheduleData.length;
+}
+
+/* ================= LỚP ================= */
+
+function buildClassList(){
+  const search = normalizeText(document.getElementById("searchClass").value).toLowerCase();
+  const classes = uniqueSorted(scheduleData.map(x=>x.class))
+    .filter(x=>x.toLowerCase().includes(search));
+
+  const box = document.getElementById("classList");
+  box.innerHTML = classes.length
+    ? classes.map(c=>`
+      <button class="${currentClass===c?'active':''}" onclick="selectClass('${escapeJs(c)}')">
+        ${c}
+      </button>
+    `).join("")
+    : `<div class="empty">Không có lớp.</div>`;
+}
+
+function selectClass(c){
+  currentClass = c;
+  buildClassList();
+  renderClassSchedule();
+
+  const url = new URL(window.location.href);
+  url.hash = "class=" + encodeURIComponent(c);
+  history.replaceState(null,"",url);
+}
+
+function renderClassSchedule(){
+  if(!currentClass){
+    document.getElementById("classSchedule").innerHTML =
+      `<div class="empty">Hãy chọn một lớp để xem thời khóa biểu.</div>`;
+    return;
+  }
+
+  const data = scheduleData.filter(x=>x.class===currentClass).sort(sortSchedule);
+
+  document.getElementById("className").textContent = `Lớp ${currentClass}`;
+  document.getElementById("classMeta").textContent =
+    `Khối ${getGrade(currentClass)} • ${data.length} tiết`;
+  document.getElementById("classTitle").innerHTML =
+    `<b>Lớp ${currentClass}</b> • Thời khóa biểu từ Thứ 2 đến Thứ 6, gồm buổi sáng và buổi chiều.`;
+
+  document.getElementById("classSchedule").innerHTML = makeWeekGrid(data);
+}
+
+function makeWeekGrid(data){
+  const periods = [1,2,3,4,5];
+
+  let html = `<div class="schedule-grid">
+    <div class="cell head">Buổi / Tiết</div>
+    ${[2,3,4,5,6].map(d=>`<div class="cell head">${DAY_NAMES[d]}</div>`).join("")}`;
+
+  for(const session of ["Sáng","Chiều"]){
+    for(const p of periods){
+      html += `<div class="cell row-title">${session}<br>Tiết ${p}</div>`;
+      for(const d of [2,3,4,5,6]){
+        const lessons = data.filter(x=>x.day===d && x.session===session && Number(x.period)===p);
+
+        html += `<div class="cell">`;
+        if(lessons.length){
+          html += lessons.map(x=>`
+            <div class="lesson">
+              <b>${x.subject}</b>
+              <small>GV: ${x.teacher || "—"}</small>
+              ${x.room ? `<small>Phòng: ${x.room}</small>` : ""}
+            </div>
+          `).join("");
+        }
+        html += `</div>`;
+      }
+    }
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function copyCurrentClassLink(){
+  if(!currentClass) return alert("Hãy chọn một lớp trước.");
+  const url = new URL(window.location.href);
+  url.hash = "class=" + encodeURIComponent(currentClass);
+  navigator.clipboard.writeText(url.toString())
+    .then(()=>alert("Đã sao chép link thời khóa biểu của lớp " + currentClass));
+}
+
+/* ================= GIÁO VIÊN ================= */
+
+function buildTeacherList(){
+  const search = normalizeText(document.getElementById("searchTeacher").value).toLowerCase();
+  const teachers = uniqueSorted(scheduleData.map(x=>x.teacher))
+    .filter(x=>x.toLowerCase().includes(search));
+
+  const box = document.getElementById("teacherList");
+  box.innerHTML = teachers.length
+    ? teachers.map(t=>`
+      <button class="${currentTeacher===t?'active':''}" onclick="selectTeacher('${escapeJs(t)}')">
+        ${t}
+      </button>
+    `).join("")
+    : `<div class="empty">Không có giáo viên.</div>`;
+}
+
+function selectTeacher(t){
+  currentTeacher = t;
+  buildTeacherList();
+  renderTeacherSchedule();
+
+  const url = new URL(window.location.href);
+  url.hash = "teacher=" + encodeURIComponent(t);
+  history.replaceState(null,"",url);
+}
+
+function renderTeacherSchedule(){
+  if(!currentTeacher){
+    document.getElementById("teacherSchedule").innerHTML =
+      `<div class="empty">Hãy chọn một giáo viên để xem thời khóa biểu.</div>`;
+    return;
+  }
+
+  const data = scheduleData.filter(x=>x.teacher===currentTeacher).sort(sortSchedule);
+
+  document.getElementById("teacherName").textContent =
+    `Giáo viên: ${currentTeacher}`;
+  document.getElementById("teacherMeta").textContent =
+    `${data.length} tiết`;
+  document.getElementById("teacherTitle").innerHTML =
+    `<b>${currentTeacher}</b> • Thời khóa biểu giảng dạy từ Thứ 2 đến Thứ 6.`;
+
+  document.getElementById("teacherSchedule").innerHTML = makeWeekGridTeacher(data);
+}
+
+function makeWeekGridTeacher(data){
+  const periods = [1,2,3,4,5];
+
+  let html = `<div class="schedule-grid">
+    <div class="cell head">Buổi / Tiết</div>
+    ${[2,3,4,5,6].map(d=>`<div class="cell head">${DAY_NAMES[d]}</div>`).join("")}`;
+
+  for(const session of ["Sáng","Chiều"]){
+    for(const p of periods){
+      html += `<div class="cell row-title">${session}<br>Tiết ${p}</div>`;
+      for(const d of [2,3,4,5,6]){
+        const lessons = data.filter(x=>x.day===d && x.session===session && Number(x.period)===p);
+
+        html += `<div class="cell">`;
+        if(lessons.length){
+          html += lessons.map(x=>`
+            <div class="lesson">
+              <b>${x.subject}</b>
+              <small>Lớp: ${x.class}</small>
+              ${x.room ? `<small>Phòng: ${x.room}</small>` : ""}
+            </div>
+          `).join("");
+        }
+        html += `</div>`;
+      }
+    }
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function copyCurrentTeacherLink(){
+  if(!currentTeacher) return alert("Hãy chọn một giáo viên trước.");
+  const url = new URL(window.location.href);
+  url.hash = "teacher=" + encodeURIComponent(currentTeacher);
+  navigator.clipboard.writeText(url.toString())
+    .then(()=>alert("Đã sao chép link của " + currentTeacher));
+}
+
+/* ================= EXCEL UPLOAD ================= */
+
+function cleanHeader(h){
+  return normalizeText(h)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g,"")
+    .replace(/đ/g,"d")
+    .replace(/[^a-z0-9]/g,"");
+}
+
+function findColumn(headers, aliases){
+  for(const alias of aliases){
+    const idx = headers.findIndex(h => cleanHeader(h) === cleanHeader(alias));
+    if(idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function parseDay(v){
+  const s = normalizeText(v).toLowerCase();
+  if(/thứ\\s*2|thu\\s*2/.test(s)) return 2;
+  if(/thứ\\s*3|thu\\s*3/.test(s)) return 3;
+  if(/thứ\\s*4|thu\\s*4/.test(s)) return 4;
+  if(/thứ\\s*5|thu\\s*5/.test(s)) return 5;
+  if(/thứ\\s*6|thu\\s*6/.test(s)) return 6;
+  const n = Number(v);
+  return [2,3,4,5,6].includes(n) ? n : 0;
+}
+
+function parseSession(v){
+  const s = normalizeText(v).toLowerCase();
+  if(s.includes("sang")) return "Sáng";
+  if(s.includes("chieu")) return "Chiều";
+  return normalizeText(v);
+}
+
+async function uploadSchedule(){
+  const input = document.getElementById("fileInput");
+  const msg = document.getElementById("uploadMessage");
+
+  if(!input.files.length){
+    msg.textContent = "Vui lòng chọn file Excel hoặc CSV.";
+    msg.style.color = "#a63f3f";
+    return;
+  }
+
+  const file = input.files[0];
+  msg.textContent = "Đang đọc dữ liệu...";
+  msg.style.color = "#557066";
+
+  try{
+    const buffer = await file.arrayBuffer();
+
+    let workbook;
+    if(file.name.toLowerCase().endsWith(".csv")){
+      const text = new TextDecoder("utf-8").decode(buffer);
+      workbook = XLSX.read(text,{type:"string"});
+    }else{
+      workbook = XLSX.read(buffer,{type:"array"});
+    }
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet,{header:1,defval:""});
+
+    if(rows.length < 2){
+      throw new Error("File không có đủ dữ liệu.");
+    }
+
+    const headers = rows[0];
+
+    const cDay = findColumn(headers,["Ngày","Thứ","Thu"]);
+    const cSession = findColumn(headers,["Buổi","Buoi"]);
+    const cPeriod = findColumn(headers,["Tiết","Tiet"]);
+    const cClass = findColumn(headers,["Lớp","Lop","Class"]);
+    const cSubject = findColumn(headers,["Môn","Mon","Môn học","Mon hoc"]);
+    const cTeacher = findColumn(headers,["Giáo viên","Giao vien","GV","Teacher"]);
+    const cRoom = findColumn(headers,["Phòng","Phong","Room"]);
+
+    if(cDay===-1 || cSession===-1 || cPeriod===-1 || cClass===-1 || cSubject===-1 || cTeacher===-1){
+      throw new Error(
+        "Thiếu cột bắt buộc. Cần có: Ngày/Thứ, Buổi, Tiết, Lớp, Môn, Giáo viên."
+      );
+    }
+
+    const newData = [];
+
+    for(let i=1;i<rows.length;i++){
+      const r = rows[i];
+      const item = {
+        day: parseDay(r[cDay]),
+        session: parseSession(r[cSession]),
+        period: Number(r[cPeriod]) || 0,
+        class: normalizeText(r[cClass]),
+        subject: normalizeText(r[cSubject]),
+        teacher: normalizeText(r[cTeacher]),
+        room: cRoom===-1 ? "" : normalizeText(r[cRoom])
+      };
+
+      if(item.day && item.session && item.period && item.class && item.subject){
+        newData.push(item);
+      }
+    }
+
+    if(!newData.length){
+      throw new Error("Không tìm thấy dòng thời khóa biểu hợp lệ.");
+    }
+
+    scheduleData = newData.sort(sortSchedule);
+    saveData();
+
+    saveHistory({
+      filename:file.name,
+      date:new Date().toISOString(),
+      count:newData.length
+    });
+
+    currentClass = uniqueSorted(scheduleData.map(x=>x.class))[0] || "";
+    currentTeacher = uniqueSorted(scheduleData.map(x=>x.teacher))[0] || "";
+
+    renderAll();
+
+    msg.textContent = `Cập nhật thành công ${newData.length} tiết từ file "${file.name}".`;
+    msg.style.color = "#2d765e";
+    input.value = "";
+  }catch(err){
+    msg.textContent = "Lỗi: " + err.message;
+    msg.style.color = "#a63f3f";
+  }
+}
+
+/* ================= LỊCH SỬ CẬP NHẬT ================= */
+
+function getHistory(){
+  return JSON.parse(localStorage.getItem("ntt_history") || "[]");
+}
+
+function saveHistory(item){
+  const arr = getHistory();
+  arr.unshift(item);
+  localStorage.setItem("ntt_history",JSON.stringify(arr.slice(0,20)));
+  renderHistory();
+}
+
+function renderHistory(){
+  const arr = getHistory();
+  const box = document.getElementById("historyList");
+
+  if(!arr.length){
+    box.innerHTML = `<div class="empty">Chưa có lịch sử cập nhật.</div>`;
+    return;
+  }
+
+  box.innerHTML = arr.map((x,i)=>`
+    <div class="history-row">
+      <div class="history-left">
+        <strong>${x.filename} <span class="tag">${x.count} tiết</span></strong>
+        <span>Ngày đăng tải: ${new Date(x.date).toLocaleString("vi-VN")}</span>
+      </div>
+      <button class="btn btn-small btn-outline" onclick="removeHistory(${i})">Xóa</button>
+    </div>
+  `).join("");
+}
+
+function removeHistory(index){
+  const arr = getHistory();
+  arr.splice(index,1);
+  localStorage.setItem("ntt_history",JSON.stringify(arr));
+  renderHistory();
+}
+
+/* ================= FILE MẪU ================= */
+
+function exportTemplate(){
+  const rows = [
+    ["Ngày","Buổi","Tiết","Lớp","Môn","Giáo viên","Phòng"],
+    ["Thứ 2","Sáng",1,"10C1","Toán","Hoàn","A101"],
+    ["Thứ 2","Sáng",2,"10C1","Văn","T.Thủy","A101"],
+    ["Thứ 2","Chiều",1,"10C1","Cầu lông","Thiên","Sân 1"],
+    ["Thứ 3","Sáng",1,"11A1","Lí","Sơn","B201"],
+    ["Thứ 5","Sáng",1,"12A1","Toán","Minh","C301"]
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"TKB");
+  XLSX.writeFile(wb,"mau_thoi_khoa_bieu.xlsx");
+}
+
+/* ================= KHÔI PHỤC ================= */
+
+function restoreSample(){
+  if(!confirm("Khôi phục dữ liệu mẫu? Dữ liệu đang lưu trên trình duyệt sẽ bị thay thế.")) return;
+  scheduleData = cloneData(SAMPLE_DATA).sort(sortSchedule);
+  saveData();
+  currentClass = "10C1";
+  currentTeacher = "Hoàn";
+  renderAll();
+
+  const msg = document.getElementById("uploadMessage");
+  msg.textContent = "Đã khôi phục dữ liệu mẫu.";
+  msg.style.color = "#2d765e";
+}
+
+/* ================= URL HASH ================= */
+
+function loadFromHash(){
+  const hash = decodeURIComponent(window.location.hash.replace("#",""));
+  if(hash.startsWith("class=")){
+    currentClass = hash.substring(6);
+    activateTab("lop");
+  }
+  if(hash.startsWith("teacher=")){
+    currentTeacher = hash.substring(8);
+    activateTab("gv");
+  }
+}
+
+function activateTab(id){
+  document.querySelectorAll(".tab").forEach(x=>{
+    x.classList.toggle("active",x.dataset.tab===id);
+  });
+  document.querySelectorAll(".panel").forEach(x=>{
+    x.classList.toggle("active",x.id===id);
+  });
+}
+
+/* ================= CHỐNG LỖI KÝ TỰ ================= */
+
+function escapeJs(s){
+  return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+}
+
+/* ================= RENDER ================= */
+
+function renderAll(){
+  renderTong();
+  buildClassList();
+  buildTeacherList();
+  renderClassSchedule();
+  renderTeacherSchedule();
+  renderHistory();
+  updateLastUpdate();
+}
+
+/* ================= SEARCH ================= */
+
+document.getElementById("searchClass").addEventListener("input",buildClassList);
+document.getElementById("searchTeacher").addEventListener("input",buildTeacherList);
+document.getElementById("tongTim").addEventListener("keydown",e=>{
+  if(e.key==="Enter") renderTong();
+});
+
+/* ================= KHỞI ĐỘNG ================= */
+
+loadData();
+renderAll();
+loadFromHash();
+
+</script>
+</body>
+</html>
