@@ -61,8 +61,22 @@ body {
   letter-spacing: .01em;
 }
 .brand__sub { margin: 4px 0 0; color: #a86f0c; font-weight: 600; font-size: 1.02rem; }
-.counter { margin-left: auto; align-self: flex-start; font-size: .88rem; color: var(--muted); white-space: nowrap; }
-.counter b { color: var(--head-ink); font-weight: 700; }
+.head-actions { margin-left: auto; align-self: center; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.counter {
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  background: var(--surface); color: var(--muted); font-size: .9rem; font-weight: 600;
+  border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px;
+}
+.counter .ico { color: var(--green-600); }
+.counter b { color: var(--head-ink); font-weight: 800; }
+.admin-link {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none; white-space: nowrap;
+  background: var(--green-600); color: #fff; font-size: .92rem; font-weight: 700; line-height: 1.15;
+  border-radius: 999px; padding: 9px 18px; box-shadow: 0 2px 8px rgba(29,90,63,.22);
+}
+.admin-link:hover { background: var(--green-ink); }
+.admin-link .ico { color: #fff; }
 
 .versions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .ver {
@@ -209,7 +223,9 @@ tbody.ses--C tr:first-child > * { border-top: 3px solid var(--green-900); }
   .brand__logo { width: 60px; height: 60px; }
   .brand { gap: 12px; flex-wrap: wrap; }
   .brand__sub { font-size: .92rem; }
-  .counter { order: 3; flex-basis: 100%; margin: 0; font-size: .8rem; }
+  .head-actions { order: 3; flex-basis: 100%; margin: 6px 0 0; justify-content: flex-start; }
+  .counter { font-size: .82rem; padding: 7px 13px; }
+  .admin-link { font-size: .85rem; padding: 8px 14px; }
   .versions { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   .ver { white-space: nowrap; }
   .tab { padding: 8px 12px; font-size: .9rem; }

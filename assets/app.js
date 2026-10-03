@@ -35,6 +35,11 @@
     var logo = $("logo");
     logo.onerror = function () { logo.onerror = null; logo.src = C.logoFallback; };
     logo.src = C.logo;
+    var ab = C.adminButton || {};
+    if (ab.show !== false) {
+      if (ab.text) $("adminLinkText").textContent = ab.text;
+      $("adminLink").hidden = false;
+    }
   }
 
   function counter() {

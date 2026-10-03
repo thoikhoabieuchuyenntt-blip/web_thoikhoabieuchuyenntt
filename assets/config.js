@@ -2,11 +2,14 @@
 window.TKB_CONFIG = {
   schoolName: "TRƯỜNG THPT CHUYÊN NGUYỄN THIỆN THÀNH",
   subtitle: "Tra cứu thời khóa biểu",
+  location: "Phường Long Đức, tỉnh Vĩnh Long",
+  // Nút liên kết tới trang Quản trị hiển thị ngay trên trang tra cứu (đặt show: false để ẩn)
+  adminButton: { show: true, text: "Quản trị / Tải Excel TKB" },
   // Đặt logo trường vào assets/logo.png (ảnh vuông, nền trong suốt). Nếu chưa có, web dùng logo tạm logo.svg
   logo: "assets/logo.png",
   logoFallback: "assets/logo.svg",
   dataPath: "data/",
-  contactNote: "Dữ liệu tổng hợp từ file thời khóa biểu Excel của trường. Có sai sót xin báo lại phòng đào tạo.",
+  contactNote: "Dữ liệu tổng hợp từ file thời khóa biểu của trường. Nếu có sai sót, xin liên hệ văn phòng nhà trường.",
   // Bộ đếm lượt truy cập dùng dịch vụ miễn phí counterapi.dev. Đặt enabled: false để tắt.
   counter: { enabled: true, namespace: "thpt-chuyen-nguyen-thien-thanh", key: "tra-cuu-tkb" },
   // Tên đầy đủ hiển thị thay cho tên viết tắt trong file Excel (để trống nếu muốn giữ nguyên). Ví dụ:

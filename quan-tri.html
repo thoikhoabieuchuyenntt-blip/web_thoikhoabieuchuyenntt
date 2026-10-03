@@ -20,6 +20,9 @@
     #ghState { font-size: .9rem; color: var(--muted); }
     .steps { margin: 0 0 16px; padding-left: 22px; color: var(--ink); }
     .steps li { margin: 3px 0; }
+    .sample { margin: 0 0 12px; }
+    .sample a { color: var(--green-ink); font-weight: 700; text-decoration: none; }
+    .sample a:hover { text-decoration: underline; }
     .panel h2 { margin: 0 0 4px; font-size: 1.2rem; color: var(--green-900); }
     .panel > p { margin: 0 0 14px; color: var(--muted); max-width: 70ch; }
     .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px; }
@@ -45,6 +48,12 @@
     .btn--sm { padding: 6px 14px; font-size: .9rem; }
     code { background: #e4e9e2; padding: 1px 6px; border-radius: 4px; font-size: .9em; }
     #preview { margin-top: 14px; }
+    .brand__text { display: flex; flex-direction: column; align-items: flex-start; }
+    .badge { display: inline-block; background: var(--gold); color: var(--gold-ink); font-weight: 800; font-size: .72rem; letter-spacing: .06em; padding: 2px 10px; border-radius: 999px; margin-bottom: 4px; }
+    .admin-link--ghost { background: var(--surface); color: var(--head-ink); border: 1px solid var(--line); box-shadow: none; }
+    .admin-link--ghost:hover { background: #eef5f0; }
+    .admin-link--out { background: #fff; color: #8a1f2b; border: 1px solid #e3b7bd; box-shadow: none; cursor: pointer; font-family: inherit; }
+    .admin-link--out:hover { background: #fbeef0; }
   </style>
 </head>
 <body>
@@ -53,10 +62,14 @@
       <div class="brand">
         <img class="brand__logo" id="logo" alt="Logo trường" width="84" height="84">
         <div class="brand__text">
+          <span class="badge">QUẢN TRỊ</span>
           <h1 class="brand__school" id="schoolName"></h1>
-          <p class="brand__sub">Quản trị thời khóa biểu</p>
+          <p class="brand__sub" id="location"></p>
         </div>
-        <a class="counter" href="./" style="color:var(--head-ink);font-weight:600">Về trang tra cứu</a>
+        <div class="head-actions">
+          <a class="admin-link admin-link--ghost" href="./"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg><span>Xem trang tra cứu</span></a>
+          <button class="admin-link admin-link--out" id="btnLogout" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span>Đăng xuất</span></button>
+        </div>
       </div>
     </div>
   </header>
@@ -66,6 +79,7 @@
       <section class="panel">
         <h2>Cập nhật thời khóa biểu hằng tuần</h2>
         <p>Dùng nguyên file Excel của người xếp TKB, không cần sửa hay chuyển đổi. Web hiển thị đúng nội dung từng ô trong file.</p>
+        <p class="sample"><a href="data/goc/tkb-4.xlsx" download>⤓ Tải file mẫu (đúng định dạng TKB của trường)</a></p>
         <ol class="steps">
           <li><b>Chọn file</b> TKB tuần mới (kéo thả vào ô bên dưới).</li>
           <li><b>Kiểm tra</b> số lớp, ngày áp dụng và xem thử vài lớp.</li>
@@ -137,6 +151,14 @@
     var parsed = null, rawFile = null, versionsDoc = null;
 
     $("schoolName").textContent = C.schoolName;
+    if ($("location")) $("location").textContent = C.location || "Quản trị & cập nhật thời khóa biểu hàng tuần";
+    $("btnLogout").onclick = function () {
+      try { localStorage.removeItem("tkb-admin"); sessionStorage.removeItem("tkb-admin"); } catch (e) {}
+      $("ghToken").value = ""; $("ghRemember").checked = false;
+      $("ghPanel").open = true; $("ghState").textContent = "Đã đăng xuất – nhập lại mã truy cập để tiếp tục";
+      msg("ghMsg", "ok", "Đã xóa mã truy cập khỏi máy này.");
+      window.scrollTo(0, 0);
+    };
     var logo = $("logo"); logo.onerror = function () { logo.onerror = null; logo.src = C.logoFallback; }; logo.src = C.logo;
 
     // ----- Thông tin kho -----
