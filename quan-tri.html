@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Quản trị – Tra cứu thời khóa biểu</title>
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/app.css">
+  <style>
+    .panel { background: var(--surface); border: 2px solid var(--green-900); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 22px; }
+    details.panel summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 12px; }
+    details.panel summary::-webkit-details-marker { display: none; }
+    details.panel summary h2 { margin: 0; }
+    details.panel summary::after { content: "▾"; margin-left: auto; color: var(--muted); }
+    details.panel[open] summary { margin-bottom: 12px; }
+    #ghState { font-size: .9rem; color: var(--muted); }
+    .steps { margin: 0 0 16px; padding-left: 22px; color: var(--ink); }
+    .steps li { margin: 3px 0; }
+    .panel h2 { margin: 0 0 4px; font-size: 1.2rem; color: var(--green-900); }
+    .panel > p { margin: 0 0 14px; color: var(--muted); max-width: 70ch; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px; }
+    .row label { display: block; font-weight: 700; color: var(--muted); font-size: .9rem; margin-bottom: 6px; }
+    .row .input { padding: 10px 12px; font-size: 1rem; }
+    .check { display: flex; gap: 8px; align-items: center; margin: 4px 0 14px; color: var(--muted); }
+    .drop { border: 2px dashed var(--green-600); border-radius: var(--radius); padding: 30px 16px; text-align: center; cursor: pointer; background: #f1f5ef; }
+    .drop.is-over { background: var(--gold-soft); border-color: var(--gold); }
+    .drop b { color: var(--green-900); }
+    .msg { margin-top: 12px; padding: 10px 14px; border-radius: 8px; }
+    .msg--ok { background: #dcefe2; color: #184d2e; }
+    .msg--err { background: #f7dcd6; color: #6d1f10; }
+    .msg--warn { background: var(--gold-soft); color: var(--gold-ink); }
+    .msg ul { margin: 6px 0 0; padding-left: 20px; max-height: 180px; overflow: auto; }
+    .stats { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 14px 0; }
+    .stats div { font-size: .95rem; color: var(--muted); }
+    .stats b { display: block; font-size: 1.6rem; color: var(--green-900); line-height: 1.1; }
+    .vlist { list-style: none; margin: 0; padding: 0; }
+    .vlist li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    .vlist li:last-child { border-bottom: 0; }
+    .vlist .v-name { font-weight: 700; flex: 1; }
+    .vlist .v-hidden { color: var(--muted); font-weight: 600; }
+    .btn--sm { padding: 6px 14px; font-size: .9rem; }
+    code { background: #e4e9e2; padding: 1px 6px; border-radius: 4px; font-size: .9em; }
+    #preview { margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <header class="site-head">
+    <div class="wrap">
+      <div class="brand">
+        <img class="brand__logo" id="logo" alt="Logo trường" width="84" height="84">
+        <div class="brand__text">
+          <h1 class="brand__school" id="schoolName"></h1>
+          <p class="brand__sub">Quản trị thời khóa biểu</p>
+        </div>
+        <a class="counter" href="./" style="color:var(--head-ink);font-weight:600">Về trang tra cứu</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <section class="panel">
+        <h2>Cập nhật thời khóa biểu hằng tuần</h2>
+        <p>Dùng nguyên file Excel của người xếp TKB, không cần sửa hay chuyển đổi. Web hiển thị đúng nội dung từng ô trong file.</p>
+        <ol class="steps">
+          <li><b>Chọn file</b> TKB tuần mới (kéo thả vào ô bên dưới).</li>
+          <li><b>Kiểm tra</b> số lớp, ngày áp dụng và xem thử vài lớp.</li>
+          <li>Bấm <b>Công bố</b>. Học sinh, phụ huynh thấy TKB mới sau 1–2 phút.</li>
+        </ol>
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Chọn file Excel">
+          <b>Kéo thả file Excel vào đây</b><br>hoặc bấm để chọn file (.xlsx, .xls)
+          <input type="file" id="file" accept=".xlsx,.xls,.xlsm" hidden>
+        </div>
+        <div id="parseMsg"></div>
+        <div id="parsed" hidden>
+          <div class="stats" id="stats"></div>
+          <div class="row">
+            <div><label for="vDate">Ngày bắt đầu áp dụng <span id="dateSrc" style="font-weight:400"></span></label><input class="input" id="vDate" type="date"></div>
+            <div><label for="vPreview">Xem thử lớp</label><select class="input" id="vPreview"></select></div>
+          </div>
+          <label class="check"><input type="checkbox" id="keepXlsx" checked> Lưu kèm file Excel gốc vào kho (thư mục <code>data/goc/</code>)</label>
+          <div class="btn-row" style="flex-wrap:wrap">
+            <button class="btn" id="btnPublish">Công bố</button>
+            <button class="btn btn--ghost" id="btnDownload">Tải file JSON về máy</button>
+          </div>
+          <div id="pubMsg"></div>
+          <div id="preview"></div>
+        </div>
+      </section>
+
+      <details class="panel" id="ghPanel">
+        <summary><h2>Cài đặt kết nối GitHub</h2> <span id="ghState"></span></summary>
+        <p>Web đọc dữ liệu trong thư mục <code>data/</code> của kho GitHub. Để công bố TKB mới, dán mã truy cập (fine-grained token) chỉ có quyền <b>Contents: Read and write</b> trên kho này.</p>
+        <div class="row">
+          <div><label for="ghOwner">Tài khoản / tổ chức</label><input class="input" id="ghOwner"></div>
+          <div><label for="ghRepo">Tên kho</label><input class="input" id="ghRepo"></div>
+          <div><label for="ghBranch">Nhánh</label><input class="input" id="ghBranch" value="main"></div>
+          <div><label for="ghToken">Mã truy cập</label><input class="input" id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="ghRemember"> Ghi nhớ trên máy này (chỉ dùng máy cá nhân)</label>
+        <button class="btn btn--ghost" id="btnTest">Kiểm tra kết nối</button>
+        <div id="ghMsg"></div>
+      </details>
+
+      <section class="panel">
+        <h2>Logo trường</h2>
+        <p>Chọn ảnh logo (PNG hoặc JPG, nên là ảnh vuông, nền trong suốt). Ảnh được chuyển thành <code>assets/logo.png</code> và hiện trên mọi trang.</p>
+        <div class="brand" style="gap:16px;flex-wrap:wrap">
+          <img class="brand__logo" id="logoPreview" alt="Xem trước logo" width="84" height="84">
+          <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp">
+          <button class="btn" id="btnLogo" disabled>Cập nhật logo</button>
+        </div>
+        <div id="logoMsg"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Các phiên bản đã công bố</h2>
+        <p>Phiên bản bị ẩn không hiện trên trang tra cứu nhưng dữ liệu vẫn được giữ lại.</p>
+        <ul class="vlist" id="vlist"><li>Đang tải…</li></ul>
+        <div id="vMsg"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/grid.js"></script>
+  <script src="assets/parser.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var C = window.TKB_CONFIG, $ = function (id) { return document.getElementById(id); }, esc = TKBGrid.esc;
+    var parsed = null, rawFile = null, versionsDoc = null;
+
+    $("schoolName").textContent = C.schoolName;
+    var logo = $("logo"); logo.onerror = function () { logo.onerror = null; logo.src = C.logoFallback; }; logo.src = C.logo;
+
+    // ----- Thông tin kho -----
+    (function initRepo() {
+      var g = C.github || {}, owner = g.owner, repo = g.repo;
+      var host = location.hostname;
+      if ((!owner || !repo) && /\.github\.io$/.test(host)) {
+        owner = owner || host.split(".")[0];
+        var seg = location.pathname.split("/").filter(Boolean)[0];
+        repo = repo || (seg && !/\.html$/.test(seg) ? seg : host);
+      }
+      var saved = {};
+      try { saved = JSON.parse(localStorage.getItem("tkb-admin") || sessionStorage.getItem("tkb-admin") || "{}"); } catch (e) {}
+      $("ghOwner").value = saved.owner || owner || "";
+      $("ghRepo").value = saved.repo || repo || "";
+      $("ghBranch").value = saved.branch || g.branch || "main";
+      $("ghToken").value = saved.token || "";
+      $("ghRemember").checked = !!localStorage.getItem("tkb-admin");
+      var ready = $("ghOwner").value && $("ghRepo").value && $("ghToken").value;
+      $("ghPanel").open = !ready;
+      $("ghState").textContent = ready ? "Đã có mã truy cập" : "Chưa có mã truy cập – cần nhập trước khi công bố";
+    })();
+    function repoInfo() {
+      var i = { owner: $("ghOwner").value.trim(), repo: $("ghRepo").value.trim(), branch: $("ghBranch").value.trim() || "main", token: $("ghToken").value.trim() };
+      try {
+        var s = JSON.stringify(i);
+        if ($("ghRemember").checked) localStorage.setItem("tkb-admin", s); else { localStorage.removeItem("tkb-admin"); sessionStorage.setItem("tkb-admin", s); }
+      } catch (e) {}
+      return i;
+    }
+    function msg(el, type, html) { $(el).innerHTML = html ? '<div class="msg msg--' + type + '">' + html + "</div>" : ""; }
+
+    // ----- GitHub API -----
+    function b64FromBytes(bytes) {
+      var bin = "", CH = 0x8000;
+      for (var i = 0; i < bytes.length; i += CH) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+      return btoa(bin);
+    }
+    function b64FromText(t) { return b64FromBytes(new TextEncoder().encode(t)); }
+    function textFromB64(b) {
+      var bin = atob(b.replace(/\s/g, "")), u = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(u);
+    }
+    function gh(method, path, body) {
+      var r = repoInfo();
+      if (!r.owner || !r.repo) return Promise.reject(new Error("Chưa nhập tài khoản và tên kho."));
+      if (!r.token) return Promise.reject(new Error("Chưa nhập mã truy cập GitHub."));
+      return fetch("https://api.github.com/repos/" + r.owner + "/" + r.repo + path, {
+        method: method,
+        headers: { Authorization: "Bearer " + r.token, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function (res) {
+        if (res.status === 404 && method === "GET") return null;
+        return res.json().then(function (j) {
+          if (!res.ok) {
+            var m = res.status === 401 ? "Mã truy cập không hợp lệ hoặc đã hết hạn."
+              : res.status === 403 ? "Mã truy cập không có quyền ghi vào kho này."
+              : res.status === 404 ? "Không tìm thấy kho hoặc mã truy cập không được cấp quyền cho kho này."
+              : (j.message || ("Lỗi GitHub " + res.status));
+            throw new Error(m);
+          }
+          return j;
+        });
+      });
+    }
+    function getFile(path) { return gh("GET", "/contents/" + path + "?ref=" + encodeURIComponent(repoInfo().branch) + "&t=" + Date.now()); }
+    function putFile(path, b64, message, sha) {
+      return gh("PUT", "/contents/" + path, { message: message, content: b64, branch: repoInfo().branch, sha: sha || undefined });
+    }
+    var dataDir = C.dataPath.replace(/\/$/, "");
+
+    $("btnTest").onclick = function () {
+      msg("ghMsg", "warn", "Đang kiểm tra…");
+      gh("GET", "").then(function (j) {
+        if (!j) throw new Error("Không tìm thấy kho hoặc mã truy cập không được cấp quyền cho kho này.");
+        var can = j.permissions && j.permissions.push;
+        $("ghState").textContent = can ? "Đã kết nối" : "Mã truy cập chưa có quyền ghi";
+        msg("ghMsg", can ? "ok" : "err", can ? "Kết nối thành công với kho <b>" + esc(j.full_name) + "</b>." : "Kết nối được nhưng mã truy cập chưa có quyền ghi.");
+        loadVersions();
+      }).catch(function (e) { msg("ghMsg", "err", esc(e.message)); });
+    };
+
+    // ----- Danh sách phiên bản -----
+    function loadVersions() {
+      var r = repoInfo();
+      var p = r.token ? getFile(dataDir + "/versions.json").then(function (f) {
+        if (!f) return { doc: { versions: [] }, sha: null };
+        return { doc: JSON.parse(textFromB64(f.content)), sha: f.sha };
+      }) : fetch(C.dataPath + "versions.json?t=" + Date.now()).then(function (res) { return res.ok ? res.json() : { versions: [] }; })
+        .then(function (d) { return { doc: d, sha: null }; });
+      return p.then(function (x) { versionsDoc = x; renderVersions(); updatePublishLabel(); return x; })
+        .catch(function (e) { $("vlist").innerHTML = "<li>" + esc(e.message) + "</li>"; });
+    }
+    function vn(iso) { var p = iso.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+    function renderVersions() {
+      var vs = (versionsDoc.doc.versions || []).slice().sort(function (a, b) { return b.id - a.id; });
+      $("vlist").innerHTML = vs.length ? vs.map(function (v) {
+        return '<li><span class="v-name">TKB ' + v.id + ", áp dụng từ " + vn(v.date) + (v.hidden ? ' <span class="v-hidden">(đang ẩn)</span>' : "") +
+          '</span><button class="btn btn--ghost btn--sm" data-toggle="' + v.id + '">' + (v.hidden ? "Hiện lại" : "Ẩn khỏi trang") + "</button></li>";
+      }).join("") : "<li>Chưa có phiên bản nào.</li>";
+    }
+    function nextId() {
+      return (versionsDoc && versionsDoc.doc.versions || []).reduce(function (m, v) { return Math.max(m, v.id); }, 0) + 1;
+    }
+    function updatePublishLabel() { $("btnPublish").textContent = "Công bố TKB " + nextId(); }
+
+    $("vlist").onclick = function (e) {
+      var b = e.target.closest("[data-toggle]"); if (!b) return;
+      var id = +b.dataset.toggle;
+      b.disabled = true;
+      loadVersions().then(function () {
+        var v = versionsDoc.doc.versions.filter(function (x) { return x.id === id; })[0];
+        v.hidden = !v.hidden;
+        versionsDoc.doc.updated = new Date().toISOString();
+        return putFile(dataDir + "/versions.json", b64FromText(JSON.stringify(versionsDoc.doc, null, 2)),
+          (v.hidden ? "Ẩn" : "Hiện") + " TKB " + id, versionsDoc.sha);
+      }).then(function () {
+        msg("vMsg", "ok", "Đã cập nhật. Trang tra cứu thay đổi sau khoảng 1–2 phút.");
+        return loadVersions();
+      }).catch(function (e) { msg("vMsg", "err", esc(e.message)); b.disabled = false; });
+    };
+
+    // ----- Đọc file Excel -----
+    var drop = $("drop"), fileInp = $("file");
+    drop.onclick = function () { fileInp.click(); };
+    drop.onkeydown = function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInp.click(); } };
+    drop.ondragover = function (e) { e.preventDefault(); drop.classList.add("is-over"); };
+    drop.ondragleave = function () { drop.classList.remove("is-over"); };
+    drop.ondrop = function (e) { e.preventDefault(); drop.classList.remove("is-over"); if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); };
+    fileInp.onchange = function () { if (fileInp.files[0]) readFile(fileInp.files[0]); };
+
+    function nextMonday() {
+      var d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 10);
+    }
+
+    function readFile(f) {
+      msg("pubMsg"); $("parsed").hidden = true;
+      msg("parseMsg", "warn", "Đang đọc " + esc(f.name) + "…");
+      f.arrayBuffer().then(function (buf) {
+        rawFile = { name: f.name, bytes: new Uint8Array(buf) };
+        var wb = XLSX.read(buf, { type: "array" });
+        parsed = TKBParser.parseWorkbook(wb, XLSX);
+        if (!parsed.slots.length) {
+          msg("parseMsg", "err", "Không tìm thấy tiết học nào. Kiểm tra sheet TKB có dòng tiêu đề chứa <code>Thứ</code> và <code>Tiết</code>, hoặc so với file mẫu.");
+          return;
+        }
+        var s = parsed.stats;
+        $("stats").innerHTML = "<div><b>" + s.classes + "</b>lớp</div><div><b>" + s.teachers + "</b>giáo viên</div><div><b>" +
+          s.slots + "</b>tiết học</div>" + (s.students ? "<div><b>" + s.students + "</b>học sinh</div>" : "") +
+          (s.homeroom ? "<div><b>" + s.homeroom + "</b>lớp có GVCN</div>" : "");
+        msg("parseMsg", parsed.warnings.length ? "warn" : "ok", parsed.warnings.length
+          ? "Đã đọc file, lưu ý " + parsed.warnings.length + " điểm:<ul>" + parsed.warnings.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>"
+          : "Đã đọc file " + esc(f.name) + ", không phát hiện lỗi.");
+        $("vDate").value = parsed.appliedDate || nextMonday();
+        $("dateSrc").textContent = parsed.appliedDate ? "(lấy từ file)" : "(file không ghi ngày, kiểm tra lại)";
+        var same = (versionsDoc && versionsDoc.doc.versions || []).filter(function (v) { return v.date === $("vDate").value; })[0];
+        if (same) parsed.warnings.unshift("Đã có TKB " + same.id + " áp dụng từ ngày này. Công bố sẽ tạo thêm phiên bản mới; có thể ẩn bản cũ ở mục bên dưới.");
+        msg("parseMsg", parsed.warnings.length ? "warn" : "ok", parsed.warnings.length
+          ? "Đã đọc file, lưu ý " + parsed.warnings.length + " điểm:<ul>" + parsed.warnings.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>"
+          : "Đã đọc file " + esc(f.name) + ", không phát hiện lỗi.");
+        $("vPreview").innerHTML = parsed.classes.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join("");
+        preview();
+        $("parsed").hidden = false;
+        updatePublishLabel();
+      }).catch(function (e) { msg("parseMsg", "err", "Không đọc được file: " + esc(e.message)); });
+    }
+    function preview() {
+      var c = $("vPreview").value;
+      $("preview").innerHTML = TKBGrid.render(parsed.slots, parsed.slots.filter(function (s) { return s[0] === c; }), "class", 0);
+    }
+    $("vPreview").onchange = preview;
+
+    function buildData(id) {
+      var date = $("vDate").value;
+      var now = new Date().toISOString();
+      var data = { id: id, date: date, published: now, classes: parsed.classes, teachers: parsed.teachers, homeroom: parsed.homeroom, slots: parsed.slots, students: parsed.students };
+      var doc = JSON.parse(JSON.stringify(versionsDoc ? versionsDoc.doc : { versions: [] }));
+      doc.versions = (doc.versions || []).filter(function (v) { return v.id !== id; });
+      doc.versions.unshift({ id: id, date: date, file: "tkb-" + id + ".json", published: now });
+      doc.versions.sort(function (a, b) { return b.id - a.id; });
+      doc.updated = now;
+      return { data: data, doc: doc };
+    }
+
+    $("btnPublish").onclick = function () {
+      var btn = this;
+      if (!$("vDate").value) { msg("pubMsg", "err", "Chọn ngày bắt đầu áp dụng."); return; }
+      btn.disabled = true;
+      msg("pubMsg", "warn", "Đang công bố…");
+      var id;
+      loadVersions().then(function (x) {
+        if (!repoInfo().token) { $("ghPanel").open = true; throw new Error("Chưa nhập mã truy cập GitHub. Có thể dùng nút Tải file JSON về máy rồi tự tải lên kho."); }
+        id = nextId();
+        var b = buildData(id), path = dataDir + "/tkb-" + id + ".json";
+        return getFile(path).then(function (old) {
+          return putFile(path, b64FromText(JSON.stringify(b.data)), "Thêm TKB " + id + " (áp dụng " + b.data.date + ")", old && old.sha);
+        }).then(function () {
+          if (!$("keepXlsx").checked) return;
+          var ext = (rawFile.name.match(/\.\w+$/) || [".xlsx"])[0];
+          return putFile(dataDir + "/goc/tkb-" + id + ext, b64FromBytes(rawFile.bytes), "File gốc TKB " + id);
+        }).then(function () {
+          return putFile(dataDir + "/versions.json", b64FromText(JSON.stringify(b.doc, null, 2)), "Công bố TKB " + id, versionsDoc.sha);
+        });
+      }).then(function () {
+        msg("pubMsg", "ok", "Đã công bố TKB " + id + ". Trang tra cứu cập nhật sau khoảng 1–2 phút.");
+        return loadVersions();
+      }).catch(function (e) { msg("pubMsg", "err", esc(e.message)); })
+        .then(function () { btn.disabled = false; });
+    };
+
+    $("btnDownload").onclick = function () {
+      if (!$("vDate").value) { msg("pubMsg", "err", "Chọn ngày bắt đầu áp dụng."); return; }
+      var id = nextId(), b = buildData(id);
+      [["tkb-" + id + ".json", JSON.stringify(b.data)], ["versions.json", JSON.stringify(b.doc, null, 2)]].forEach(function (f, i) {
+        setTimeout(function () {
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([f[1]], { type: "application/json" }));
+          a.download = f[0]; document.body.appendChild(a); a.click(); a.remove();
+        }, i * 400);
+      });
+      msg("pubMsg", "ok", "Đã tải 2 file. Tải cả hai lên thư mục <code>data/</code> của kho (ghi đè versions.json).");
+    };
+
+    // ----- Logo -----
+    var logoPng = null;
+    $("logoPreview").onerror = function () { this.onerror = null; this.src = C.logoFallback; };
+    $("logoPreview").src = C.logo + "?t=" + Date.now();
+    $("logoFile").onchange = function () {
+      var f = this.files[0]; if (!f) return;
+      var img = new Image();
+      img.onload = function () {
+        var size = Math.min(512, Math.max(img.width, img.height));
+        var cv = document.createElement("canvas"); cv.width = cv.height = size;
+        var k = size / Math.max(img.width, img.height), w = img.width * k, h = img.height * k;
+        cv.getContext("2d").drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        var url = cv.toDataURL("image/png");
+        $("logoPreview").src = url;
+        logoPng = url.split(",")[1];
+        $("btnLogo").disabled = false;
+        msg("logoMsg");
+      };
+      img.onerror = function () { msg("logoMsg", "err", "Không đọc được ảnh này. Chọn file PNG hoặc JPG."); };
+      img.src = URL.createObjectURL(f);
+    };
+    $("btnLogo").onclick = function () {
+      var btn = this; btn.disabled = true;
+      msg("logoMsg", "warn", "Đang cập nhật logo…");
+      getFile("assets/logo.png").then(function (old) {
+        return putFile("assets/logo.png", logoPng, "Cập nhật logo trường", old && old.sha);
+      }).then(function () {
+        msg("logoMsg", "ok", "Đã cập nhật logo. Trang tra cứu đổi logo sau khoảng 1–2 phút (có thể cần tải lại trang).");
+      }).catch(function (e) { msg("logoMsg", "err", esc(e.message)); btn.disabled = false; });
+    };
+
+    loadVersions();
+  })();
+  </script>
+</body>
+</html>
